@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>Vue Simple App</title>
+    <script src="https://unpkg.com/vue@next"></script>
+    <style>
+        .size-choices {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: aquamarine;
+        }
+
+        .size-choices.active {
+            /* 選択状態用のクラス */
+            background-color: darkslateblue;
+        }
+
+        .material-choices {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: palevioletred;
+        }
+
+        .material-choices.active {
+            /* 選択状態用のクラス */
+            background-color: darkorange;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- render buttons for all sizeChoices.
+        for each button v-on:click adds class "active" by calling the method "setSize" -->
+    <button v-for="sizeChoice in sizeChoices"
+            v-on:click="changeSizeChoice" :id="'size-'+sizeChoice.id" class="size-choices" :data-id="sizeChoice.id">
+        #{ sizeChoice.label }#
+    </button>
+    <p>You selected id: #{ selectedSize.id }#</p>
+    <p>You selected label: #{ selectedSize.label }#</p>
+
+    <!-- render buttons for all materialChoices.
+        for each button v-on:click adds class "active" by calling the method "setMaterial" -->
+    <button v-for="materialChoice in materialChoices"
+            v-on:click="changeMaterialChoice" :id="'material-'+materialChoice.id" class="material-choices"
+            :data-id="materialChoice.id">
+        #{ materialChoice.label }#
+    </button>
+
+    <p>You selected id: #{ selectedMaterial.id }#</p>
+    <p>You selected label: #{ selectedMaterial.label }#</p>
+
+    <hr>
+    <button @click="executeSearch">検索</button>
+</div>
+
+<script>
+    const app = Vue.createApp({
+        delimiters: ['#{', '}#'],
+        data() {
+            return {
+                // search args 用に param 属性を追加。 name 属性は label に変更(ボタンのラベルなので)
+                sizeChoices: [
+                    {id: 1, label: 'Small', param: 'small', price: 10, color: 'red'},
+                    {id: 2, label: 'Medium', param: 'medium', price: 20, color: 'orange'},
+                    {id: 3, label: 'Large', param: 'large', price: 30, color: 'yellow'},
+                    {id: 4, label: 'Extra Large', param: 'extra_large', price: 40, color: 'purple'},
+                    {id: 5, label: 'Jumbo', param: 'jumbo', price: 50, color: 'green'},
+                ],
+                materialChoices: [
+                    {id: 1, label: 'Cotton', param: 'cotton', price: 10, color: 'red'},
+                    {id: 2, label: 'Polyester', param: 'polyester', price: 20, color: 'orange'},
+                    {id: 3, label: 'Wool', param: 'wool', price: 30, color: 'yellow'},
+                    {id: 4, label: 'Silk', param: 'silk', price: 40, color: 'purple'},
+                    {id: 5, label: 'Cashmere', param: 'cashmere', price: 50, color: 'green'},
+                ],
+
+                // クリックされたボタンの id を格納していたが、選択されたアイテムを格納するように修正した。
+                selectedSize: {},
+                selectedMaterial: {},
+            }
+        },
+        methods: {
+            /* ボタンのクリックイベントで呼び出されるメソッド */
+            changeChoice(event, items, className) {
+                /*  クリックされたアイテムの data 属性 から id を取得し、文字列から数値に変換
+                    その id と一致する sizeChoices のアイテムを selected に格納
+                    いったんすべてのボタンから active クラスを削除し、クリックされたボタンに active クラスを追加
+                    最後に、戻り値として、 selected を返す */
+                const id = parseInt(event.target.dataset['id']);
+                const selected = items.find((choice) => choice.id === id);
+
+                let sizeButtons = document.querySelectorAll(className);
+                for (let i = 0; i < sizeButtons.length; i++) {
+                    sizeButtons[i].classList.remove('active');
+                }
+                event.target.classList.add('active');
+
+                return selected
+            },
+            changeSizeChoice(event) {
+                this.selectedSize = this.changeChoice(event, this.sizeChoices, '.size-choices');
+            },
+            changeMaterialChoice(event) {
+                this.selectedMaterial = this.changeChoice(event, this.materialChoices, '.material-choices');
+            },
+
+            /* url 生成系のメソッド */
+            getSearchParamList: function () {
+                /* 引数のキーと値のペアを格納するリストを作成する */
+                let searchArgs = {};
+                searchArgs['size'] = this.selectedSize.param;
+                searchArgs['material'] = this.selectedMaterial.param;
+
+                // 検索パラメータを文字列に変換
+                let paramList = []
+                for (let key in searchArgs) {
+                    if (searchArgs[key]) { //undefined のときは、パラメータを追加しない
+                        paramList.push(key + '=' + searchArgs[key]);
+                    }
+                }
+
+                console.log(paramList)
+                return paramList;
+            },
+
+            createSearchPath: function () {
+                /* 遷移先のパスを生成する */
+
+                // 現在のパスを取得
+                let baseURL = location.protocol + '//' + location.host + location.pathname;
+
+                // 検索パラメータの辞書を取得
+                let searchParams = this.getSearchParamList();
+                if (searchParams.length === 0) {
+                    return baseURL; //どのボタンも選択状態でない場合は、検索パスを生成しない
+                }
+
+                // 検索パラメータを文字列に変換
+                return baseURL + '?' + searchParams.join('&');
+            },
+            executeSearch: function () {
+                /*
+                    検索ボタンを押したときに呼び出される
+                    検索パラメータを取得し、遷移先のパスを生成する
+                    生成したパスにリダイレクトする
+                 */
+                const path = this.createSearchPath()
+                console.log(path)
+                // location.href = path; // これのコメントをはずすと、ボタンクリック時に 302 リダイレクトされます。試してみてください。
+            },
+        }
+    });
+    app.mount('#app');
+</script>
+</body>
+</html>
