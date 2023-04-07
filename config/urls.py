@@ -21,5 +21,5 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('vue/', TemplateView.as_view(template_name='vue.html'), name='vue3'),
+    path('', TemplateView.as_view(template_name='vue.html'), name='vue'),
 ]

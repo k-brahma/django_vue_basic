@@ -36,21 +36,21 @@
         for each button v-on:click adds class "active" by calling the method "setSize" -->
     <button v-for="sizeChoice in sizeChoices"
             v-on:click="changeSizeChoice" :id="'size-'+sizeChoice.id" class="size-choices" :data-id="sizeChoice.id">
-        #{ sizeChoice.label }#
+        [[ sizeChoice.label ]]
     </button>
-    <p>You selected id: #{ selectedSize.id }#</p>
-    <p>You selected label: #{ selectedSize.label }#</p>
+    <p>You selected id: [[ selectedSize.id ]]</p>
+    <p>You selected label: [[ selectedSize.label ]]</p>
 
     <!-- render buttons for all materialChoices.
         for each button v-on:click adds class "active" by calling the method "setMaterial" -->
     <button v-for="materialChoice in materialChoices"
             v-on:click="changeMaterialChoice" :id="'material-'+materialChoice.id" class="material-choices"
             :data-id="materialChoice.id">
-        #{ materialChoice.label }#
+        [[ materialChoice.label ]]
     </button>
 
-    <p>You selected id: #{ selectedMaterial.id }#</p>
-    <p>You selected label: #{ selectedMaterial.label }#</p>
+    <p>You selected id: [[ selectedMaterial.id ]]</p>
+    <p>You selected label: [[ selectedMaterial.label ]]</p>
 
     <hr>
     <button @click="executeSearch">検索</button>
@@ -58,7 +58,7 @@
 
 <script>
     const app = Vue.createApp({
-        delimiters: ['#{', '}#'],
+        delimiters: ['[[', ']]'],
         data() {
             return {
                 // search args 用に param 属性を追加。 name 属性は label に変更(ボタンのラベルなので)
